@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://dcnameservice</value>
+    <!--<value>hdfs://lxhadoop</value>-->
+  </property>
+
+  <property>
+    <name>ha.zookeeper.quorum</name>
+    <value>
+      bj-dc-jn-001.tendcloud.com:2181,bj-dc-jn-002.tendcloud.com:2181,bj-dc-namenode-001.tendcloud.com:2181,bj-dc-namenode-002.tendcloud.com:2181,bj-dc-yarn-001.tendcloud.com:2181,bj-dc-yarn-002.tendcloud.com:2181,bj-dc-zk-001.tendcloud.com:2181
+    </value>
+  </property>
+
+  <property>
+    <name>dfs.nameservices</name>
+    <value>dcnameservice</value>
+  </property>
+
+
+  <property>
+    <name>dfs.ha.automatic-failover.enabled.dcnameservice</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.namenodes.dcnameservice</name>
+    <value>namenode79,namenode129</value>
+  </property>
+
+  <property>
+    <name>dfs.client.failover.proxy.provider.dcnameservice</name>
+    <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.rpc-address.dcnameservice.namenode79</name>
+    <value>bj-dc-namenode-001.tendcloud.com:8020</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.servicerpc-address.dcnameservice.namenode79</name>
+    <value>bj-dc-namenode-001.tendcloud.com:8022</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.http-address.dcnameservice.namenode79</name>
+    <value>bj-dc-namenode-001.tendcloud.com:50070</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.https-address.dcnameservice.namenode79</name>
+    <value>bj-dc-namenode-001.tendcloud.com:50470</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.rpc-address.dcnameservice.namenode129</name>
+    <value>bj-dc-namenode-002.tendcloud.com:8020</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.servicerpc-address.dcnameservice.namenode129</name>
+    <value>bj-dc-namenode-002.tendcloud.com:8022</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.http-address.dcnameservice.namenode129</name>
+    <value>bj-dc-namenode-002.tendcloud.com:50070</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.https-address.dcnameservice.namenode129</name>
+    <value>bj-dc-namenode-002.tendcloud.com:50470</value>
+  </property>
+
+  <property>
+    <name>dfs.replication</name>
+    <value>3</value>
+  </property>
+
+  <property>
+    <name>dfs.blocksize</name>
+    <value>134217728</value>
+  </property>
+
+  <property>
+    <name>fs.trash.interval</name>
+    <value>10080</value>
+  </property>
+
+  <property>
+    <name>fs.trash.checkpoint.interval</name>
+    <value>10080</value>
+  </property>
+
+  <property>
+    <name>io.native.lib.available</name>
+    <value>true</value>
+  </property>
+
+</configuration>
