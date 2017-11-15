@@ -3,6 +3,7 @@ package com.luogh.spark.others
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 
@@ -10,6 +11,8 @@ import scala.collection.mutable
   * @author luogh 
   */
 object ResortData {
+
+  val LOGGER = LoggerFactory.getLogger(ResortData.getClass)
 
   def main(args: Array[String]): Unit = {
     require(args.length == 1, "require 1 arguments.")
@@ -30,7 +33,8 @@ object ResortData {
           case 0 =>
             sameCityCnt(dependencyRDD)
           case 1 =>
-            sameCityDistribution(dependencyRDD, sqlContext)
+//            sameCityDistribution(dependencyRDD, sqlContext)
+            sameCityDistribution2(dependencyRDD, sqlContext)
           case 3 =>
             dependencyRDD.toDF.registerTempTable("city_max_table")
             sameCityCntDetail(sqlContext)
@@ -102,38 +106,71 @@ object ResortData {
       *
       */
 
+    import sqlContext.implicits._
+
+    dependencyRDD.cache()
+
+    val cityCombTime = dependencyRDD
+      .map { r => (r.times, r.city -> r.times) }
+      .distinct()
+      .aggregateByKey(new mutable.HashSet[String]())(
+        (set, v) => {
+          if (set.size > 1000) {
+            LOGGER.warn("too many cities, just take 1000, current times = {}", v._2)
+          } else {
+            set += v._1
+          }
+          set
+        },
+        (set1, set2) => {
+          set1 ++= set2
+          set1
+        }
+      ).mapValues { citySet =>  citySet.toSeq.sorted.mkString(",")
+    }
+
+    val tdidWithTime = dependencyRDD.map { r => (r.times, r.tdid) }.countApproxDistinctByKey(0.03)
+
+    cityCombTime.join(tdidWithTime).map {
+      case (times, (cityList, tdid_cnt)) => (cityList, times, tdid_cnt)
+    }
+      .toDF("cities", "times", "tdid_cnt")
+      .write.parquet("/fe/user/guohao.luo/city_combo_times_tdid_cnt_result_20171112")
+
+  }
+
+  def sameCityDistribution2(dependencyRDD: RDD[Record], sqlContext: SQLContext): Unit = {
     /**
-      * 分组
-      * 按城市组合 组合出现次数分组
       *
-      * @param tuple (tdid,城市组合,cnt)
-      * @return
+      * 城市  出现次数  tdid
+      *
+      * 城市组合    组合出现次数    tdid个数
+      * (北京:上海)      3              200
+      * (北京:天津)      3              200
+      *
+      * 一个tdid在一年中即出现在北京同时出现在上海并且出现次数相同
+      *
       */
-    def grouped(tuple: (String, String, Int)): String = s"${tuple._2};${tuple._3}"
 
     import sqlContext.implicits._
 
-    val rdd = dependencyRDD.groupBy(_.tdid)
-      .flatMap {
-        case (tdid, iter) =>
-          // tdid 城市组合 cnt
-          iter.foldLeft(new mutable.HashMap[Int, mutable.ArrayBuffer[String]]()) { (m, r) =>
-            val sets = m.getOrElseUpdate(r.times, new mutable.ArrayBuffer[String]())
+    val rdd = dependencyRDD.map(r => ((r.tdid, r.times), r))
+        .aggregateByKey(new mutable.HashSet[String]())(
+          (sets, r) => {
             sets += r.city
-            m
-          }.map {
-            case (times, sets) => (tdid, sets.sorted.mkString(","), times)
+            sets
+          } ,
+          (s1, s2) => {
+            s1 ++= s2
+            s1
           }
-      }.groupBy(grouped _)
-      .mapValues { iter => iter.map(_._1).toSet.size }
-      .map {
-        case (citiesCnt, tdidCnt) =>
-          val splits = citiesCnt.split(";")
-          (splits(0), splits(1).toInt, tdidCnt)
-      }
-      .toDF("cities", "time", "tdid_cnt")
-      .write.parquet("/fe/user/guohao.luo/city_combo_times_tdid_cnt_result_20171112")
+        ).map(tuple => (tuple._1._2, tuple._2.toSeq.sorted.mkString(",")) -> tuple._1._1)
+    .countApproxDistinctByKey(0.01)
+        .map(tuple => (tuple._1._2, tuple._1._1, tuple._2))
+        .toDF("cities", "time", "tdid_cnt")
+        .write.parquet("/fe/user/guohao.luo/city_combo_times_tdid_cnt_result_20171115")
   }
+
 
   case class Record(tdid: String, times: Int, city: String)
 

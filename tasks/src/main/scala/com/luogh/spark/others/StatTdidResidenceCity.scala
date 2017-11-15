@@ -5,6 +5,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -304,35 +305,39 @@ object StatTdidResidenceCity {
 
   // tdid 出现次数最大的城市 频次
   def cityMaxTimes(data: DataFrame, sqlContext: SQLContext): Unit = {
-    def partition(tuple: (String, Int, String)) = tuple._1
+
+    import sqlContext.implicits._
+    import org.apache.spark.sql.functions._
 
     data.map { row =>
       val tdid = row.getAs[String]("tdid")
       val city = row.getAs[String]("city")
       val times = row.getAs[String]("times").toInt
-      (tdid, times, city)
-    }.groupBy(partition _, 700)
-      .mapValues { row =>
-        val iter = row.toSeq.sortBy(_._2).reverseIterator
-        val buff = new ArrayBuffer[(String, Int, String)]
-        var maxTime = -1
-        var completed = false
-        while (iter.hasNext && !completed) {
-          val next = iter.next()
-          if (buff.size == 0) {
-            buff += next
-            maxTime = next._2
-          } else {
-            if (next._2 != maxTime) {
-              completed = true
-            }
-          }
+      tdid -> (times, city)
+    }.aggregateByKey(new mutable.HashMap[Int, mutable.HashSet[String]]())(
+      (map, v) => {
+       val list = map.getOrElseUpdate(v._1, new mutable.HashSet[String]())
+        list += v._2
+        map
+      },
+      (m1, m2) => {
+        for ((k, v) <- m2) {
+           val newOne = m1.getOrElseUpdate(k, new mutable.HashSet[String]())
+          newOne ++= v
         }
-        buff
+        m1
       }
-      .flatMap { item =>
-        item._2.map { r => s"${r._1},${r._2},${r._3}" }
-      }.saveAsTextFile("/fe/user/guohao.luo/city_max_times")
+    ).mapValues { values =>
+      val maxTime = values.keys.max
+      val cities = values.getOrElse(maxTime, new mutable.HashSet[String]()).toSeq.sorted.mkString(",")
+      (maxTime, cities)
+    }.map {
+      case (tdid, (times, cities)) =>
+        (cities, times, tdid)
+    }.toDF("city", "times", "tdid")
+      .groupBy($"city", $"times")
+      .agg(countDistinct('tdid) as "tdid_cnt")
+      .write.parquet("/fe/user/guohao.luo/city_max_times")
   }
 
   // 1. tdid 出现次数最大的城市 频次数据 统计 出现城市相同 tdid个数
