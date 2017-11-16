@@ -7,12 +7,11 @@ import org.scalatest.{BeforeAndAfter, FunSpec}
 /**
   * @author luogh 
   */
-class SparkTestSpec extends FunSpec with BeforeAndAfter {
+class SparkTestSpec extends FunSpec with BeforeAndAfter { suit =>
 
   val master = "local"
   val appName = "example-spark"
   var sc: SparkContext = _
-
 
   before {
     val conf = new SparkConf().setMaster(master).setAppName(appName)
@@ -52,14 +51,20 @@ class SparkTestSpec extends FunSpec with BeforeAndAfter {
   }
 
   describe("计算一年中每个tdid出现次数相同的城市组合统计") {
+
     it("城市组合 -> 出现次数 -> tdid个数") {
       val sqlContext = new SQLContext(sc)
       import sqlContext.implicits._
 
+      val data = sc.textFile("/data/test_city_tdid.txt")
+        .map { line =>
+          val split = line.split(",")
+          CityTdid(split(0), split(1), split(2))
+        }.toDF
 
+      StatTdidResidenceCity.cityMaxTimes(data, sqlContext)
     }
   }
-
-
-
 }
+
+case class CityTdid(tdid: String, times: String, city: String)

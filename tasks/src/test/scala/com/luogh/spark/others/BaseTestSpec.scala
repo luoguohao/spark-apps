@@ -1,5 +1,6 @@
 package com.luogh.spark.others
 
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.FunSpec
 
 import scala.collection.mutable
@@ -35,4 +36,23 @@ class BaseTestSpec extends FunSpec {
     }
   }
 
+  it("测试case class是否实现Serilizable") {
+    assert(Test("test").isInstanceOf[Serializable])
+  }
+
+  it("测试call-by-name") {
+    def call(bean: => SparkContext): Unit = {
+      println("===================>")
+      println(bean.toString)
+    }
+    val conf = new SparkConf().setMaster("local[*]").setAppName("test")
+    call(new SparkContext(conf))
+  }
+
+}
+
+case class Test(time: String)
+
+class CallByName {
+  println("init")
 }
