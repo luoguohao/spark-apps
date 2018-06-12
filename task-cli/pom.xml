@@ -79,10 +79,6 @@
       <artifactId>livy-client-http</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.vertica</groupId>
-      <artifactId>vertica-jdbc</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
     </dependency>
@@ -106,7 +102,6 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.16.8</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/joda-time/joda-time -->
     <dependency>
@@ -132,8 +127,15 @@
       <artifactId>tasks</artifactId>
       <version>1.0</version>
     </dependency>
-  </dependencies>
 
+    <dependency>
+      <groupId>com.vertica.jdbc</groupId>  <!--自定义-->
+      <artifactId>vertica</artifactId>    <!--自定义-->
+      <version>7.1.2-0</version> <!--自定义-->
+      <scope>system</scope> <!--system，类似provided，需要显式提供依赖的jar以后，Maven就不会在Repository中查找它-->
+      <systemPath>${project.basedir}/../libs/vertica-jdbc-7.1.2-0.jar</systemPath> <!--项目根目录下的lib文件夹下-->
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>

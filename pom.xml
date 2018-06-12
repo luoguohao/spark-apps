@@ -15,9 +15,9 @@
   </modules>
 
   <properties>
-    <hdfs.version>2.6.0-cdh5.5.2</hdfs.version>
+    <hdfs.version>2.6.0</hdfs.version>
     <scala.version>2.10</scala.version>
-    <spark.version>1.6.1</spark.version>
+    <spark.version>1.6.2</spark.version>
     <livy.version>0.4.0-incubating</livy.version>
     <MaxPermGen>512m</MaxPermGen>
     <CodeCacheSize>512m</CodeCacheSize>
@@ -28,12 +28,27 @@
     <mockito.version>1.9.5</mockito.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <java.version>1.7</java.version>
+    <java.version>1.8</java.version>
     <execution.root>${user.dir}</execution.root>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>2.10.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-compiler</artifactId>
+        <version>2.10.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-reflect</artifactId>
+        <version>2.10.4</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-sql_2.10</artifactId>
@@ -70,11 +85,6 @@
         <version>${livy.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>com.vertica</groupId>
-        <artifactId>vertica-jdbc</artifactId>
-        <version>7.0.1</version>
-      </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-hdfs</artifactId>
@@ -158,9 +168,7 @@
       <version>${scalatra.version}</version>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
-
   <build>
     <pluginManagement>
       <plugins>
@@ -243,8 +251,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.0</version>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
